@@ -1,23 +1,14 @@
-import React from 'react';
-import Grid from '@mui/material/Grid';
-import AppMenu from './packages/appmenu';
-import Appbar from './packages/appbar';
-import Breadcrumb from './packages/breadcrumbs';
+import React, { useState } from 'react';
+import Login from './packages/login';
 
 const App = (): React.ReactElement => {
-  return (
-    <div className="App">
-      <Appbar />
-      <Grid container>
-        <Grid item xs={2}>
-          <AppMenu />
-        </Grid>
-        <Grid item xs={10} sx={{ padding: '16px' }}>
-          <Breadcrumb />
-        </Grid>
-      </Grid>
-    </div>
-  );
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  if (!isAuthenticated) {
+    return <Login />;
+  }
+
+  return <div className="App">Connected</div>;
 };
 
 export default App;
