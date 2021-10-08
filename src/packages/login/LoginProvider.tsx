@@ -1,31 +1,48 @@
-import React, { useReducer } from 'react';
-import { reducer, isLoging } from './LoginReducer';
+import * as React from 'react';
+import axios from 'axios';
+import LoginReducer, {
+  endSuccessAuthentication,
+  endFailAuthentication,
+} from './LoginReducer';
+import { ContextType, LoginProviderProps, initialState } from './utils';
 
-const initialState = {
-  isAuthenticated: false,
-  isLoading: false,
-  isError: '',
-};
+const LoginContext = React.createContext<ContextType | undefined>(undefined);
 
-export const Context = React.createContext({});
+const LoginProvider = ({
+  children,
+}: LoginProviderProps): React.ReactElement => {
+  const [state, dispatch] = React.useReducer(LoginReducer, initialState);
+  const value = { state, dispatch };
 
-interface ProviderProps {
-  children: React.ReactElement;
-}
+  React.useEffect(() => {
+    if (state.isAuthenticating) {
+      const fetchData = async () => {
+        try {
+          const result = await axios(
+            'http://hn.algolia.com/api/v1/search?qery=france',
+          );
+          console.log('result', result.data);
+          dispatch(endSuccessAuthentication());
+        } catch (error) {
+          dispatch(endFailAuthentication());
+        }
+      };
 
-const LoginProvider = ({ children }: ProviderProps): React.ReactElement => {
-  const [state, dispatch] = useReducer(reducer, initialState);
-
-  const authenticate = (login: string, password: string) => {
-    // Start authenticate
-    dispatch(isLoging());
-  };
+      fetchData();
+    }
+  }, [state.isAuthenticating]);
 
   return (
-    <Context.Provider value={{ state, dispatch, authenticate }}>
-      {children}
-    </Context.Provider>
+    <LoginContext.Provider value={value}>{children}</LoginContext.Provider>
   );
 };
 
-export default LoginProvider;
+const useLogin = (): ContextType => {
+  const context = React.useContext(LoginContext);
+  if (context === undefined) {
+    throw new Error('useLogin must be used within a LoginProvider');
+  }
+  return context;
+};
+
+export { LoginProvider, useLogin };
